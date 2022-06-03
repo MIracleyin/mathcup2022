@@ -1,0 +1,14 @@
+# tex
+*.gz
+*.log
+*.pdf
+*.aux
+*.out
+*.synctex.gz
+*.bbl
+*.blg
+*.bcf
+*.xml
+
+# ide
+.idea
