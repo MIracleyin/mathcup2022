@@ -1,7 +1,7 @@
 # tex
 *.gz
 *.log
-*.pdf
+example.pdf
 *.aux
 *.out
 *.synctex.gz
