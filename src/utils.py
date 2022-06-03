@@ -3,6 +3,7 @@ import jieba
 import re
 import unicodedata
 
+
 def clean_text(text: str):
     if not isinstance(text, str):
         text = str(text)
@@ -28,4 +29,21 @@ def cut_text(text: str) -> str:
     return text_with_spaces
 
 
+def get_stop_words(path: str):
+    with open(path, encoding='utf-8') as f:
+        stopword = f.read()
+        stopword_list = stopword.splitlines()
+    return stopword_list
 
+
+def filter_stop_words(text: str) -> str:
+    with open('stopwords.txt', encoding='utf-8') as f:
+        stopword = f.read()
+        stopword_list = stopword.splitlines()
+        text_list = text.split(' ')
+        filted_text = ''
+        for word in text_list:
+            if word not in stopword_list:
+                filted_text += word + ' '
+
+    return filted_text
