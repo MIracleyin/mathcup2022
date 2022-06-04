@@ -78,7 +78,7 @@ def get_topic_words(model, feature_names, n_top_words):
 
 
 def resolve_q1(process_data: pd.DataFrame, save_path: str,
-               is_vis=False,
+               is_vis=True,
                n_topics=5,
                n_topic_words=30,
                threshold=0,
@@ -138,5 +138,5 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
     if is_vis:
         pic = pyLDAvis.sklearn.prepare(lda, cnt_tf, cnt_vector)
         pyLDAvis.display(pic)
-        pyLDAvis.save_html(pic, 'lda_pass' + str(8) + '.html')
+        pyLDAvis.save_html(pic, 'lda_pass' + str(n_topics) + '.html')
         pyLDAvis.display(pic)

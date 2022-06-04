@@ -7,8 +7,8 @@ from utils import get_topic_list, get_stop_words, get_topic_words
 
 if __name__ == '__main__':
     # load processed data
-    news = pd.read_csv(processed_news)
-    resolve_q1(news, "news_res.csv", n_topics=8, threshold=0)
+    news = pd.read_csv(processed_travel)
+    resolve_q1(news, "travel_res.csv", n_topics=5, threshold=0)
     # topic_list = get_topic_list()
     # stop_list = get_stop_words(stop_path)
     # travel_corpus = travel['text'].tolist()
