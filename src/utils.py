@@ -9,11 +9,27 @@ import pyLDAvis
 import pyLDAvis.sklearn
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
+from nerpy import NERModel
+
+from transformers import (
+    BertTokenizerFast,
+    AutoTokenizer,
+    AutoModelForTokenClassification,
+    AutoModel,
+    pipeline,
+    BertForSequenceClassification,
+    BertTokenizer
+
+)
+
+import torch
 
 raw_part1_path = "dataset/dataset-2018-2019.xlsx"
 raw_part2_path = "dataset/dataset-2020-2021.xlsx"
 processed_travel = "dataset/processed/travelid_text.csv"
 processed_news = "dataset/processed/newsid_text.csv"
+processed_path = "dataset/processed"
+results_path = "dataset/results"
 stop_path = "dataset/stopwords.txt"
 
 
@@ -31,6 +47,19 @@ def clean_text(text: str):
         if letter.isalpha() or letter == ' ':
             pure_text += letter
     text = ' '.join(word for word in pure_text.split() if len(word) > 1)
+    return text
+
+
+def clean_textv2(text: str):
+    if not isinstance(text, str):
+        text = str(text)
+    text = text.replace('\n', " ")  # 新行，我们是不需要的
+    text = re.sub("\d+", '', text)  # 删除数字
+    text = re.sub('[a-zA-Z]', '', text)  # 删除字母
+    text = re.sub('[\s]', '', text)  # 删除空格
+    print(text)
+    pure_text = ''
+    # 以防还有其他特殊字符（数字）等等，我们直接把他们loop一遍，过滤掉
     return text
 
 
@@ -96,7 +125,7 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
                                  stop_words=get_stop_words(stop_path),
                                  max_df=0.5,
                                  min_df=10)
-    cnt_tf = cnt_vector.fit_transform(corpus) 
+    cnt_tf = cnt_vector.fit_transform(corpus)
 
     # build LDA model
     lda = LatentDirichletAllocation(n_components=n_topics,
@@ -126,11 +155,11 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
     print(topic_count_dict)
 
     # get results
-    topics = lda.transform(cnt_tf) # 200 [(200,6)]
+    topics = lda.transform(cnt_tf)  # 200 [(200,6)]
     is_related = []
-    for t in topics: # [1, 6]
-        related_number = topic_count_dict[list(t).index(np.max(t))] 
-        is_related.append(1 if related_number > threshold else 0) # 
+    for t in topics:  # [1, 6]
+        related_number = topic_count_dict[list(t).index(np.max(t))]
+        is_related.append(1 if related_number > threshold else 0)  #
     process_data['is_realted'] = is_related
     process_data = pd.DataFrame(process_data, columns=['ID', 'is_realted'])
     process_data.to_csv(os.path.join("dataset/results", save_path), index=0)
@@ -140,3 +169,144 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
         pyLDAvis.display(pic)
         pyLDAvis.save_html(pic, 'lda_pass' + str(8) + '.html')
         pyLDAvis.display(pic)
+
+
+def get_class_infors():
+    dataset_hotel_1 = pd.read_excel(raw_part1_path, sheet_name='酒店评论')
+    dataset_hotel_2 = pd.read_excel(raw_part2_path, sheet_name='酒店评论')
+
+    dataset_scenic_1 = pd.read_excel(raw_part1_path, sheet_name='景区评论')
+    dataset_scenic_2 = pd.read_excel(raw_part2_path, sheet_name='景区评论')
+
+    dataset_travel_1 = pd.read_excel(raw_part1_path, sheet_name='游记攻略')
+    dataset_travel_2 = pd.read_excel(raw_part2_path, sheet_name='游记攻略')
+
+    dataset_food_1 = pd.read_excel(raw_part1_path, sheet_name='餐饮评论')
+    dataset_food_2 = pd.read_excel(raw_part2_path, sheet_name='餐饮评论')
+
+    dataset_news_1 = pd.read_excel(raw_part1_path, sheet_name='微信公众号新闻')
+    dataset_news_2 = pd.read_excel(raw_part2_path, sheet_name='微信公众号新闻')
+
+    hotel = pd.concat([dataset_hotel_1, dataset_hotel_2], axis=0)
+    scenic = pd.concat([dataset_scenic_1, dataset_scenic_2], axis=0)
+    travel = pd.concat([dataset_travel_1, dataset_travel_2], axis=0)
+    food = pd.concat([dataset_food_1, dataset_food_2], axis=0)
+    news = pd.concat([dataset_news_1, dataset_news_2], axis=0)
+
+    return hotel, scenic, travel, food, news
+
+
+def modify_infors(hotel, scenic, travel, food, news):
+    def addstr(pre: str, text):
+        if not isinstance(text, str):
+            text = str(text)
+        return pre + '-' + text
+
+    hotel['curpusID'] = hotel['酒店评论ID'].apply(lambda x: addstr('酒店评论', x))
+    hotel['text'] = hotel['评论内容']
+    hotel['product'] = hotel['酒店名称']
+    hotel['years'] = pd.to_datetime(hotel['评论日期']).dt.year
+
+    scenic['curpusID'] = scenic['景区评论ID'].apply(lambda x: addstr('景区评论', x))
+    scenic['text'] = scenic['评论内容']
+    scenic['product'] = scenic['景区名称']
+    scenic['years'] = pd.to_datetime(scenic['评论日期']).dt.year
+
+    travel['curpusID'] = travel['游记ID'].apply(lambda x: addstr('旅游攻略', x))
+    travel['text'] = travel['游记标题'] + '\n' + travel['正文']
+    travel['years'] = pd.to_datetime(travel['发布时间']).dt.year
+    travel['text'] = travel['text'].apply(lambda x: clean_textv2(x))
+    text_list = travel['text'].values.tolist()
+    travel['product'] = get_ner_infer(text_list)
+
+    food['curpusID'] = food['餐饮评论ID'].apply(lambda x: addstr('餐饮评论', x))
+    food['text'] = food['评论内容'] + '\n' + food['标题']
+    food['product'] = food['餐饮名称']
+    food['years'] = pd.to_datetime(food['评论日期']).dt.year
+
+    news['curpusID'] = news['文章ID'].apply(lambda x: addstr('微信公共号文章', x))
+    news['text'] = news['公众号标题'] + '\n' + news['正文']
+    news['years'] = pd.to_datetime(news['发布时间']).dt.year
+    news['text'] = news['text'].apply(lambda x: clean_textv2(x))
+    text_list = news['text'].values.tolist()
+    news['product'] = get_ner_infer(text_list)
+
+    hotel = pd.DataFrame(hotel, columns=['curpusID', 'text', 'product', 'years'])
+    scenic = pd.DataFrame(scenic, columns=['curpusID', 'text', 'product', 'years'])
+    travel = pd.DataFrame(travel, columns=['curpusID', 'text', 'product', 'years'])
+    food = pd.DataFrame(food, columns=['curpusID', 'text', 'product', 'years'])
+    news = pd.DataFrame(news, columns=['curpusID', 'text', 'product', 'years'])
+
+    return hotel, scenic, travel, food, news
+
+
+def get_all_infors(hotel, scenic, travel, food, news):
+    df = pd.concat([hotel, scenic, travel, food, news], axis=0)
+    df = df.dropna().drop_duplicates(['product'])
+    product_id = ['ID' + str(i + 1) for i in range(len(df))]
+    df['productID'] = product_id
+    return df
+
+
+def get_ner_infer(text):
+    # nlp task model
+    # tokenizer = BertTokenizerFast.from_pretrained('bert-base-chinese')
+    # model = AutoModelForTokenClassification.from_pretrained('ckiplab/bert-base-chinese-ner')
+    p = "黑龙江省、辽宁省、吉林省、河北省、河南省、湖北省、湖南省、山东省、山西省、陕西省、安徽省、浙江省、江苏省、福建省、广东省、海南省、四川省、云南省、贵州省、青海省、甘肃省、江西省、台湾省".split('、')
+    p2 = "黑龙江省、辽宁省、吉林省、河北省、河南省、湖北省、湖南省、山东省、山西省、陕西省、安徽省、浙江省、江苏省、福建省、广东省、海南省、四川省、云南省、贵州省、青海省、甘肃省、江西省、台湾省".replace("省","").split('、')
+    c = "珠海市、汕头市、佛山市、韶关市、湛江市、肇庆市、江门市、茂名市、惠州市、梅州市、汕尾市、河源市、阳江市、清远市、东莞市、中山市、潮州市、揭阳市、云浮市".split('、')
+    c2 = "珠海市、汕头市、佛山市、韶关市、湛江市、肇庆市、江门市、茂名市、惠州市、梅州市、汕尾市、河源市、阳江市、清远市、东莞市、中山市、潮州市、揭阳市、云浮市".replace("市","").split('、')
+    tmp = ["中国", "广西"]
+    f = p + p2 + c + c2 + tmp
+    model = NERModel("bert", "shibing624/bert4ner-base-chinese")
+    _, _, entities = model.predict(text)
+    long_word = []
+    for ent in entities:
+        word_list = []
+        for word_type in ent:
+            word, type = word_type
+            if type == 'LOC':
+                if word not in f:
+                    word_list.append(word)
+        len_word = max(word_list, key=len, default='')
+        long_word.append(len_word)
+
+    return long_word
+
+def get_sentiment(text_list):
+    tokenizer = BertTokenizer.from_pretrained('IDEA-CCNL/Erlangshen-Roberta-110M-Sentiment')
+    model = BertForSequenceClassification.from_pretrained('IDEA-CCNL/Erlangshen-Roberta-110M-Sentiment')
+    output = model(torch.tensor([tokenizer.encode(text_list)]))
+    return output
+
+def get_frequence(s):
+    pass
+
+
+def get_final_socre(s):
+    pass
+
+
+def get_product_type(s):
+    if '景区' in s:
+        return '景区'
+    elif '酒店' in s:
+        return '酒店'
+    elif '餐饮' in s:
+        return '特色餐饮'
+    elif '景点' in s:
+        return '景点'
+    elif '民宿' in s:
+        return '民宿'
+    elif '乡村' in s:
+        return '乡村旅游'
+    elif '文创' in s:
+        return '文创'
+    else:
+        return '景点'
+
+
+if __name__ == '__main__':
+    t = ["今天心情不好", "今天心情好"]
+    o = get_sentiment(t)
+    print(o)
