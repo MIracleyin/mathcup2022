@@ -96,7 +96,7 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
                                  stop_words=get_stop_words(stop_path),
                                  max_df=0.5,
                                  min_df=10)
-    cnt_tf = cnt_vector.fit_transform(corpus)
+    cnt_tf = cnt_vector.fit_transform(corpus) 
 
     # build LDA model
     lda = LatentDirichletAllocation(n_components=n_topics,
@@ -126,11 +126,11 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
     print(topic_count_dict)
 
     # get results
-    topics = lda.transform(cnt_tf)
+    topics = lda.transform(cnt_tf) # 200 [(200,6)]
     is_related = []
-    for t in topics:
-        related_number = topic_count_dict[list(t).index(np.max(t))]
-        is_related.append(1 if related_number > threshold else 0)
+    for t in topics: # [1, 6]
+        related_number = topic_count_dict[list(t).index(np.max(t))] 
+        is_related.append(1 if related_number > threshold else 0) # 
     process_data['is_realted'] = is_related
     process_data = pd.DataFrame(process_data, columns=['ID', 'is_realted'])
     process_data.to_csv(os.path.join("dataset/results", save_path), index=0)
