@@ -3,6 +3,13 @@
 
 \documentclass[bwprint]{gmcmthesis}
 \usepackage[framemethod=TikZ]{mdframed}
+\usepackage{longtable}
+\usepackage{lineno,hyperref}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{caption}
 \title{全国研究生数学建模竞赛论文标题}
 \baominghao{4321} %参赛队号
 \schoolname{XX大学}%学校名称
@@ -61,65 +68,147 @@ frametitlerulewidth=.5pt, frametitlebackgroundcolor=gray!2,]
 
 \subsection{引言}
 
-创意平板折叠桌注重于表达木制品的优雅和设计师所想要强调的自动化与功能性。为了增大有效使用面积。设计师以长方形木板的宽为直径截取了一个圆形作为桌面，又将木板剩余的面积切割成了若干个长短不一的木条，每根木条的长度为平板宽到圆上一点的距离，分别用两根钢筋贯穿两侧的木条，使用者只需提起木板的两侧，便可以在重力的作用下达到自动升起的效果，相互对称的木条宛如下垂的桌布，精密的制作工艺配以质朴的木材，让这件工艺品看起来就像是工业革命时期的机器。
+近年来，基于文本形式的在线旅游与用户生成内容愈发成为人们获取旅游信息进行攻略查询的重要信息来源。在这些信息中，有许多内容蕴含丰富的旅游相关信息，比如各文旅实体可能之间存在某种内在联系能够通过一定手段被挖掘出来，进而能够用作数据分析、营销产品设计及推荐系统等业务。因此，从众多文本数据中筛选出与文旅主题相关的信息，进而运用知识图谱手段挖掘文旅实体之间内在联系具有重要意义。
 
 \subsection{问题的提出}
 
-\subsubsection{问题的提出内容一}
-
-围绕创意平板折叠桌的动态变化过程、设计加工参数，本文依次提出如下问题：
-
-（1）给定长方形平板尺寸 （$120 cm \times 50 cm \times 3 cm$），每根木条宽度（2.5 cm），连接桌腿木条的钢筋的位置，折叠后桌子的高度（53 cm）。要求建立模型描述此折叠桌的动态变化过程，并在此基础上给出此折叠桌的设计加工参数和桌脚边缘线的数学描述。
-
-
-
-（2）折叠桌的设计应做到产品稳固性好、加工方便、用材最少。对于任意给定的折叠桌高度和圆形桌面直径的设计要求，讨论长方形平板材料和折叠桌的最优设计加工参数，例如，平板尺寸、钢筋位置、开槽长度等。对于桌高70 cm，桌面直径80 cm的情形，确定最优设计加工参数。
-
-
-（3）给出软件设计的数学模型，可以根据客户任意设定的折叠桌高度、桌面边缘线的形状大小和桌脚边缘线的大致形状，给出所需平板材料的形状尺寸和切实可行的最优设计加工参数，使得生产的折叠桌尽可能接近客户所期望的形状，并根据所建立的模型给出几个设计的创意平板折叠桌。要求给出相应的设计加工参数，画出至少8张动态变化过程的示意图。
-
-\section{模型的假设}
-
 \begin{itemize}
-\item 忽略实际加工误差对设计的影响；
-\item 木条与圆桌面之间的交接处缝隙较小，可忽略；
-\item 钢筋强度足够大，不弯曲；
-\item 假设地面平整。
+	\item 问题一：针对附件中的微信公众号新闻子表，根据其中公众号推文与文旅的相关度进行分类。与文旅相关的高频主题词可能包括：旅游，活动，交通，酒店，景区，假期，游客，农家乐等。
+ 
+	\item 问题二：根据表格中对景区、酒店等旅游产品的实例和信息，将提取出的旅游产品进行提取。随后构建模型从多维度对产品的热度进行评价。
+ 
+	\item 问题三：根据表格中的OTA、UGC数据，对旅游产品进行关联度分析，找出以景区、酒店、餐饮为核心的强关联模式。并在此基础上进行可视化分析。
+ 
+	\item 问题四：基于历史数据，分析疫情前后旅游产品变化。
 \end{itemize}
 
-\section{符号说明}
 
-\begin{tabular}{cc}
- \hline
- \makebox[0.4\textwidth][c]{符号}	&  \makebox[0.5\textwidth][c]{意义} \\ \hline
- D	    & 木条宽度（cm） \\ \hline
- L	    & 木板长度（cm）  \\ \hline
- W	    & 木板宽度（cm）  \\ \hline
- N	    & 第n根木条  \\ \hline
- T	    & 木条根数  \\ \hline
- H	    & 桌子高度（cm）  \\ \hline
- R	    & 桌子半径（cm）  \\ \hline
- R	    & 桌子直径（cm）  \\ \hline
-\end{tabular}
+% \section{模型的假设}
+
+% \begin{itemize}
+% \item 忽略实际加工误差对设计的影响；
+% \item 木条与圆桌面之间的交接处缝隙较小，可忽略；
+% \item 钢筋强度足够大，不弯曲；
+% \item 假设地面平整。
+% \end{itemize}
+
+% \section{符号说明}
+
+% \begin{tabular}{cc}
+%  \hline
+%  \makebox[0.4\textwidth][c]{符号}	&  \makebox[0.5\textwidth][c]{意义} \\ \hline
+%  D	    & 木条宽度（cm） \\ \hline
+%  L	    & 木板长度（cm）  \\ \hline
+%  W	    & 木板宽度（cm）  \\ \hline
+%  N	    & 第n根木条  \\ \hline
+%  T	    & 木条根数  \\ \hline
+%  H	    & 桌子高度（cm）  \\ \hline
+%  R	    & 桌子半径（cm）  \\ \hline
+%  R	    & 桌子直径（cm）  \\ \hline
+% \end{tabular}
 
 \section{问题分析}
 
 \subsection{问题一分析}
-题目要求建立模型描述折叠桌的动态变化图，由于在折叠时用力大小的不同，我们不能描述在某一时刻折叠桌的具体形态，但我们可以用每根木条的角度变化来描述折叠桌的动态变化。首先，我们知道折叠桌前后左右对称，我们可以运用几何知识求出四分之一木条的角度变化。最后，根据初始时刻和最终形态两种状态求出桌腿木条开槽的长度。
+利用附件中提供的公众号推文和游记攻略，本文需要构建适当模型根据其与文旅主题的相关性进行样本的有效划分。
 
+首先，公众号推文包含标题、发表时间和正文信息。经过初步观察，推文标题和正文中都包含相与文旅相关的主题词，但其中有些正文内容收到其本身是广告或图片的形式，导致其内容体现在正文文本上与文旅主题相关程度不高。针对这类数据的预处理直接影响后续文本分类模型的好坏。
+
+其次，游记攻略相关信息包括城市、游记标题、发布时间、出发时间、出行天数、人物、费用及正文。经过初步观察，游记攻略的标题和正文蕴含着丰富文本信息，但其中同样存在一些不相关的内容需要甄别，这也对后续的分类模型带来一定的挑战。
 
 
 \subsection{问题二分析}
-题目要求从折叠桌的稳固性好、加工方便、用材最少三个角度，确定设计加工参数。我们可以从应力、支撑面积考虑稳固性，从开槽长度考虑加工方便，从木板长度考虑用材最少。而它们之间又是相互制约，我们需要确定最优设计加工参数，可以建立非线性规划模型，用lingo软件来求解最优设计加工参数（平板尺寸、钢筋位置、开槽长度等），这里以合力的方向（斜向上）与最长木条（桌腿）的夹角方向最小为目标函数，以木条所承受应力小于木条的许用应力、支撑面积大于桌面面积、木条的开槽长度小于木条本身长为约束条件。
-\begin{figure}[!h]
-\centering
-\includegraphics[width=.7\textwidth]{1.png}
-\caption{问题三流程图}
-\end{figure}
+对旅游产品进行特征工程，最直观的为旅游产品被提及的次数。其他可能的思路包括旅游产品评价的高频词提取，评论情感倾向识别。
+
+
+% \begin{figure}[!h]
+% \centering
+% \includegraphics[width=.7\textwidth]{1.png}
+% \caption{问题三流程图}
+% \end{figure}
+
 \subsection{问题三分析}
-题目要求制作软件的意思就是客户给定折叠桌高度、桌面边缘线的形状大小和桌脚边缘线的大致形状，将这些信息输入程序就得到客户想要的桌子。我们在求解最优设计加工参数时，自行给定桌面边缘线形状（椭圆、相交圆等），桌脚边缘线形状，折叠桌高度，应用第二问的非线性规划模型，用MATLAB软件绘制折叠桌截面图，得到自己设计的创意平板折叠桌。
+关联度构建可以考虑由公众号新闻和攻略出发进行挖掘。
+
+\subsection{问题一建模与求解}
+
+\subsubsection{数据预处理}
+
+根据前文分析，公众号推文和游记的标题与正文都一定程度包含与文旅相关的内容，故本文将标题与正文进行合并，用于后续的分析。对于已经获得的文本，本文对其进行数据清理，将其中的数字、字母、特殊字符、换行符和空格等进行删除，并随后对字段进行分词处理。
+
+\subsubsection{模型构建与求解}
+
+针对已有的文本，本文考虑构建LDA（Latent Dirichlet Allocation）主题模型实现文章与文旅相关性的划分。LDA模型利用了贝叶斯的思想，将每个文本和每个主题词的先验分布均视为狄利克雷（Dirichlet）分布，其中文本词向量一致，目标是求语料库的分布。
+\begin{gather}
+	\theta_d \sim Dirichlet(\alpha) \\
+	\beta_k \sim Dirichlet(\eta)
+\end{gather}
 
 
+其中随机变量$\theta_d$与$\beta_k$分别代表第$d$条文本和第$k$个主题词，$\alpha$和$\eta$分别代表分布的超参数向量，维度分别为$K$和$V$。对于第$d$条文本中的第$n$个词，根据多项分布可以得到其主题编号$z_{dn} \sim multi(\theta_d)$和词分布$w_{dn} \sim multi(\beta_{z_{dn}})$。则$(\alpha \rightarrow \theta_d \rightarrow z_d)$组成了Dirichlet-multi共轭分布。故能够得到$\theta_d$的后验分布$Dirichlet(\theta_d|\alpha + n_d)$，同样可以得到$\beta_k$的后验分布$Dirichlet(\beta_k|\eta + n_k)$。LDA模型的任务便是需要得到收敛的主题词$\beta$分布。至于LDA模型的求解，本文选用基于变分推断的EM算法。
+
+首先本文给LDA主题模型设定了一系列主题词总共38个，包括:“旅游、活动、节庆、特产、交通、酒店、景区、景点、文创、文化、乡村旅游、民宿、假日、假期、游客、采摘、赏花、春游、踏青、康养、公园、滨海游、度假、农家乐、剧本杀、旅行、徒步、工业旅游、线路、自驾游、 团队游、攻略、游记、包车、玻璃栈道、游艇、高尔夫、温泉”。随后，运用LDA主题模型得到每条文本分属$K$个分类的概率，并统计了每个类中的单词的出现频率，并提取其中最常出现的$D$个词汇， 上述$D$，$K$为模型超参数。
+
+对LDA主题模型分得的$K$个类别，本文将其中每类的高频词汇提出，分别将每类对应的高频词汇与文旅相关主题词进行匹配，匹配度达到一定阈值$\gamma$则认定该类属于与文旅主题相关，否则为不相关，值得一提的是阈值$\gamma$在本文中也为超参数。此外本文通过pyLDAvid和pyLDAvis对主题进行可视化。
+
+
+
+对于公众号推文，本文发现，在超参数$K=6$，$\gamma=0$的时候，分类的效果较为理想，经过初步可视化，以其中四个分类的高频词为例，如下图所示：
+
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}{0.49\linewidth}
+		\centering
+		\includegraphics[width=0.9\linewidth]{figures/news1.png}
+		\caption{分类2}
+		\label{news1}%文中引用该图片代号
+	\end{minipage}
+	\begin{minipage}{0.49\linewidth}
+		\centering
+		\includegraphics[width=0.9\linewidth]{figures/news2.png}
+		\caption{分类3}
+		\label{news2}%文中引用该图片代号
+	\end{minipage}
+	%\qquad
+	%让图片换行，
+	
+	\begin{minipage}{0.49\linewidth}
+		\centering
+		\includegraphics[width=0.9\linewidth]{figures/news3.png}
+		\caption{分类1}
+		\label{news3}%文中引用该图片代号
+	\end{minipage}
+	\begin{minipage}{0.49\linewidth}
+		\centering
+		\includegraphics[width=0.9\linewidth]{figures/news4.png}
+		\caption{分类5}
+		\label{news4}%文中引用该图片代号
+	\end{minipage}
+\end{figure}
+
+经过初步观察，基于LDA的建模是有效的，文旅相关的文本被提取了出来，其余的分类包括新冠疫情或党建主题。
+
+对于旅游攻略，本文发现，在超参数$K=5$，$\gamma=0$的时候，分类的效果较为理想，经过初步可视化，以其中两个分类的高频词为例，如下图所示：
+
+\begin{figure}[H]
+    \centering
+    \subfigure[分类1]{
+        \label{travel1}
+        \includegraphics[width=0.45\textwidth]{figures/travel1.png}
+    }
+    \hspace{0in}
+    \subfigure[分类2]{
+        \label{travel2}
+        \includegraphics[width=0.45\textwidth]{figures/travel2.png}
+    }
+    \caption{基于LDA模型的旅游攻略词频分析}
+    \label{travel_cipin}
+\end{figure}
+
+通过图\ref{travel_cipin}能够看出，LDA主题模型的分类对于旅游攻略文本同样是有效的，文旅相关的文本与党建等无关主题的文本被有效提取了出来。
+
+下表给出了微信公众号推文和游记攻略与文旅主题相关性的判断：
 
 %参考文献   手工录入
 %\begin{thebibliography}{9}%宽度9
@@ -128,7 +217,7 @@ frametitlerulewidth=.5pt, frametitlebackgroundcolor=gray!2,]
 %\end{thebibliography}
 
 %采用bibtex方案
-\cite{mittelbach_latex_2004,wright_latex3_2009,beeton_unicode_2008,vieth_experiences_2009}
+\cite{wright_latex3_2009}
 
 \bibliographystyle{gmcm}
 \bibliography{example}
