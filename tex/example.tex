@@ -118,7 +118,7 @@ frametitlerulewidth=.5pt, frametitlebackgroundcolor=gray!2,]
 
 
 \subsection{问题二分析}
-对旅游产品进行特征工程，最直观的为旅游产品被提及的次数。其他可能的思路包括旅游产品评价的高频词提取，评论情感倾向识别。
+针对旅游产品的提取，最直观的是通过酒店、餐厅和旅游景点的评论信息进行提取，但是经过初步观察发现，在游记攻略中也蕴含丰富的文旅实体信息，如果忽略游记攻略是不妥的，在此本文考虑使用无监督学习方法对攻略中可能存在的实体信息进行提取。对旅游产品进行特征工程，最直观的为旅游产品被提及的次数，但直考虑次数不能够客观反映游客对旅游产品的满意程度，故根据文本的情感分析同样是十分必要的。
 
 
 % \begin{figure}[!h]
@@ -128,15 +128,15 @@ frametitlerulewidth=.5pt, frametitlebackgroundcolor=gray!2,]
 % \end{figure}
 
 \subsection{问题三分析}
-关联度构建可以考虑由公众号新闻和攻略出发进行挖掘。
+关联度构建可以考虑由公众号新闻和攻略出发进行挖掘，现有对图神经网络和知识图谱算法的研究十分热门，合理利用文本信息，挖掘其中关系，并在知识图谱火或是图神经网络中进行有效的高阶信息提取对于挖掘旅游产品之间关系十分重要。
 
-\subsection{问题一建模与求解}
+\section{问题一建模与求解}
 
-\subsubsection{数据预处理}
+\subsection{数据预处理}
 
 根据前文分析，公众号推文和游记的标题与正文都一定程度包含与文旅相关的内容，故本文将标题与正文进行合并，用于后续的分析。对于已经获得的文本，本文对其进行数据清理，将其中的数字、字母、特殊字符、换行符和空格等进行删除，并随后对字段进行分词处理。
 
-\subsubsection{模型构建与求解}
+\subsection{模型构建与求解}
 
 针对已有的文本，本文考虑构建LDA（Latent Dirichlet Allocation）主题模型实现文章与文旅相关性的划分。LDA模型利用了贝叶斯的思想，将每个文本和每个主题词的先验分布均视为狄利克雷（Dirichlet）分布，其中文本词向量一致，目标是求语料库的分布。
 \begin{gather}
@@ -206,9 +206,45 @@ frametitlerulewidth=.5pt, frametitlebackgroundcolor=gray!2,]
     \label{travel_cipin}
 \end{figure}
 
-通过图\ref{travel_cipin}能够看出，LDA主题模型的分类对于旅游攻略文本同样是有效的，文旅相关的文本与党建等无关主题的文本被有效提取了出来。
+通过图\ref{travel_cipin}能够看出，LDA主题模型的分类对于旅游攻略文本同样是有效的，文旅相关的文本与党建、团建等无关主题的文本被有效提取了出来。
 
 下表给出了微信公众号推文和游记攻略与文旅主题相关性的判断：
+
+\begin{center}
+    \begin{longtable}{c|c|c}
+      \caption{微信公众号推文及游记攻略与文旅主题相关性预测}
+      \label{wx_yj_related}\\
+        \hline
+        \textbf{文本类别} & \textbf{相关性} & \textbf{ID（由小到大排序）} \\
+        \hline
+          公众号推文 & \begin{tabular}[c]{@{}c@{}}
+            相关 \\ 不相关 
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}l@{}}
+            1001，1004，1006，1008，……，7267，7269，7281，7284 \\ 1002，1003，1005，1007，……，7282，7283，7285，7286
+          \end{tabular} \\
+		  游记攻略 & \begin{tabular}[c]{@{}c@{}}
+            相关 \\ 不相关 
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}l@{}}
+            1001，1003，1004，1006，……，1291，1292，1293，1294 \\ 1002，1005，1007，1020，……，1211，1251，1254，1266
+          \end{tabular} \\
+        \hline
+    \end{longtable}
+    \end{center}
+
+\section{问题二建模与求解}
+
+\subsection{模型的构建与求解}
+
+\section{问题三建模与求解}
+
+\subsection{图卷积神经网络}
+
+
+
+\subsection{模型的构建与求解}
+
 
 %参考文献   手工录入
 %\begin{thebibliography}{9}%宽度9
