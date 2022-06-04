@@ -194,7 +194,7 @@ if __name__ == '__main__':
     stopwords = './datasets/stopwords.txt'
     baked_data = './datasets/baked_data.csv'
     methods = Methods( data_2018, data_2020, stopwords, baked_data)
-    methods.first()
+    # methods.first()
     methods.second()
     methods.thrid()
     methods.fourth()
