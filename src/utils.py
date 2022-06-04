@@ -10,6 +10,13 @@ import pyLDAvis.sklearn
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
+from transformers import (
+    BertTokenizerFast,
+    AutoModelForMaskedLM,
+    AutoModelForCausalLM,
+    AutoModelForTokenClassification,
+)
+
 raw_part1_path = "dataset/dataset-2018-2019.xlsx"
 raw_part2_path = "dataset/dataset-2020-2021.xlsx"
 processed_travel = "dataset/processed/travelid_text.csv"
@@ -96,7 +103,7 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
                                  stop_words=get_stop_words(stop_path),
                                  max_df=0.5,
                                  min_df=10)
-    cnt_tf = cnt_vector.fit_transform(corpus) 
+    cnt_tf = cnt_vector.fit_transform(corpus)
 
     # build LDA model
     lda = LatentDirichletAllocation(n_components=n_topics,
@@ -126,11 +133,11 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
     print(topic_count_dict)
 
     # get results
-    topics = lda.transform(cnt_tf) # 200 [(200,6)]
+    topics = lda.transform(cnt_tf)  # 200 [(200,6)]
     is_related = []
-    for t in topics: # [1, 6]
-        related_number = topic_count_dict[list(t).index(np.max(t))] 
-        is_related.append(1 if related_number > threshold else 0) # 
+    for t in topics:  # [1, 6]
+        related_number = topic_count_dict[list(t).index(np.max(t))]
+        is_related.append(1 if related_number > threshold else 0)  #
     process_data['is_realted'] = is_related
     process_data = pd.DataFrame(process_data, columns=['ID', 'is_realted'])
     process_data.to_csv(os.path.join("dataset/results", save_path), index=0)
@@ -140,3 +147,93 @@ def resolve_q1(process_data: pd.DataFrame, save_path: str,
         pyLDAvis.display(pic)
         pyLDAvis.save_html(pic, 'lda_pass' + str(8) + '.html')
         pyLDAvis.display(pic)
+
+
+def get_class_infors():
+    dataset_hotel_1 = pd.read_excel(raw_part1_path, sheet_name='酒店评论')
+    dataset_hotel_2 = pd.read_excel(raw_part2_path, sheet_name='酒店评论')
+
+    dataset_scenic_1 = pd.read_excel(raw_part1_path, sheet_name='景区评论')
+    dataset_scenic_2 = pd.read_excel(raw_part2_path, sheet_name='景区评论')
+
+    dataset_travel_1 = pd.read_excel(raw_part1_path, sheet_name='游记攻略')
+    dataset_travel_2 = pd.read_excel(raw_part2_path, sheet_name='游记攻略')
+
+    dataset_food_1 = pd.read_excel(raw_part1_path, sheet_name='餐饮评论')
+    dataset_food_2 = pd.read_excel(raw_part2_path, sheet_name='餐饮评论')
+
+    dataset_news_1 = pd.read_excel(raw_part1_path, sheet_name='微信公众号新闻')
+    dataset_news_2 = pd.read_excel(raw_part2_path, sheet_name='微信公众号新闻')
+
+    hotel = pd.concat([dataset_hotel_1, dataset_hotel_2], axis=0)
+    scenic = pd.concat([dataset_scenic_1, dataset_scenic_2], axis=0)
+    travel = pd.concat([dataset_travel_1, dataset_travel_2], axis=0)
+    food = pd.concat([dataset_food_1, dataset_food_2], axis=0)
+    news = pd.concat([dataset_news_1, dataset_news_2], axis=0)
+
+    return hotel, scenic, travel, food, news
+
+
+def modify_infors(hotel, scenic, travel, food, news):
+    def addstr(pre: str, text):
+        if not isinstance(text, str):
+            text = str(text)
+        return pre + '-' + text
+
+    hotel['curpusID'] = hotel['酒店评论ID'].apply(lambda x: addstr('酒店评论', x))
+    hotel['text'] = hotel['评论内容']
+    hotel['product'] = hotel['酒店名称']
+    hotel['years'] = pd.to_datetime(hotel['评论日期']).dt.year
+
+    scenic['curpusID'] = scenic['景区评论ID'].apply(lambda x: addstr('景区评论', x))
+    scenic['text'] = scenic['评论内容']
+    scenic['product'] = scenic['景区名称']
+    scenic['years'] = pd.to_datetime(scenic['评论日期']).dt.year
+
+    travel['curpusID'] = travel['游记ID'].apply(lambda x: addstr('旅游攻略', x))
+    travel['text'] = travel['游记标题'] + '\n' + travel['正文']
+    travel['product'] = travel['游记标题'] + '\n' + travel['正文']  # todo get product by NER
+    travel['years'] = pd.to_datetime(travel['发布时间']).dt.year
+    tmp = travel['product'].values[0]
+    res = get_ner_infer(tmp)
+
+    food['curpusID'] = food['餐饮评论ID'].apply(lambda x: addstr('餐饮评论', x))
+    food['text'] = food['评论内容'] + '\n' + food['标题']
+    food['product'] = food['餐饮名称']
+    food['years'] = pd.to_datetime(food['评论日期']).dt.year
+
+    news['curpusID'] = news['文章ID'].apply(lambda x: addstr('微信公共号文章', x))
+    news['text'] = news['公众号标题'] + '\n' + news['正文']
+    news['product'] = news['公众号标题'] + '\n' + news['正文']  # todo get product by NER
+    news['years'] = pd.to_datetime(news['发布时间']).dt.year
+
+    hotel = pd.DataFrame(hotel, columns=['curpusID', 'text', 'product', 'years'])
+    scenic = pd.DataFrame(scenic, columns=['curpusID', 'text', 'product', 'years'])
+    travel = pd.DataFrame(travel, columns=['curpusID', 'text', 'product', 'years'])
+    food = pd.DataFrame(food, columns=['curpusID', 'text', 'product', 'years'])
+    news = pd.DataFrame(news, columns=['curpusID', 'text', 'product', 'years'])
+
+    return hotel, scenic, travel, food, news
+
+
+def get_all_infors(hotel, scenic, travel, food, news):
+    df = pd.concat([hotel, scenic, travel, food, news], axis=0)
+    product_id = ['ID' + str(i + 1) for i in range(len(df))]
+    df['productID'] = product_id
+    return df
+
+
+def get_ner_infer(text: str):
+    # nlp task model
+    tokenizer = BertTokenizerFast.from_pretrained('bert-base-chinese')
+    model = AutoModelForTokenClassification.from_pretrained('ckiplab/albert-tiny-chinese-ws')
+    input = tokenizer(text, padding=True, truncation=True, return_tensors="pt",
+                     max_length=512)  # or other models above
+    res = model(**input)
+    print(res)
+
+
+if __name__ == '__main__':
+    hotel, scenic, travel, food, news = get_class_infors()
+    hotel, scenic, travel, food, news = modify_infors(hotel, scenic, travel, food, news)
+    all_df = get_all_infors(hotel, scenic, travel, food, news)
