@@ -352,10 +352,10 @@ def get_final_socre(year_2018_count, year_2019_count, year_2020_count, year_2021
 
     product_hot_score = pd.concat([year_2018_count, year_2019_count, year_2020_count, year_2021_count], axis=0)
 
-    year_2018_count['final_hot'] = year_2018_count['hot_score'].div(np.sum(product_hot_score['hot_score']),                                                    axis=0)  # 化成一个小数 加起来为1
-    year_2019_count['final_hot'] = year_2019_count['hot_score'].div(np.sum(product_hot_score['hot_score']), axis=0)
-    year_2020_count['final_hot'] = year_2020_count['hot_score'].div(np.sum(product_hot_score['hot_score']), axis=0)
-    year_2021_count['final_hot'] = year_2021_count['hot_score'].div(np.sum(product_hot_score['hot_score']), axis=0)
+    year_2018_count['final_hot'] = year_2018_count['hot_score'].div(np.sum(year_2018_count['hot_score']),                                                    axis=0)  # 化成一个小数 加起来为1
+    year_2019_count['final_hot'] = year_2019_count['hot_score'].div(np.sum(year_2019_count['hot_score']), axis=0)
+    year_2020_count['final_hot'] = year_2020_count['hot_score'].div(np.sum(year_2020_count['hot_score']), axis=0)
+    year_2021_count['final_hot'] = year_2021_count['hot_score'].div(np.sum(year_2021_count['hot_score']), axis=0)
 
     year_2018 = year_2018_count.sort_values(by="final_hot", ascending=False).reset_index(drop=True)
     year_2019 = year_2019_count.sort_values(by="final_hot", ascending=False).reset_index(drop=True)
