@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import pyLDAvis
 import pyLDAvis.sklearn
+import tqdm
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 from nerpy import NERModel
@@ -274,17 +275,102 @@ def get_ner_infer(text):
     return long_word
 
 def get_sentiment(text_list):
+    print("------------------bert----------------------")
+    outputs = []
     tokenizer = BertTokenizer.from_pretrained('IDEA-CCNL/Erlangshen-Roberta-110M-Sentiment')
+    # inputs = tokenizer(batch_list, padding=True, truncation=True, return_tensors="pt",
+    #                    max_length=512).to('cuda')
     model = BertForSequenceClassification.from_pretrained('IDEA-CCNL/Erlangshen-Roberta-110M-Sentiment')
-    output = model(torch.tensor([tokenizer.encode(text_list)]))
-    return output
+    pbar = tqdm.tqdm(text_list)
+    for text in pbar:
+        output = model(torch.tensor([tokenizer.encode(text,max_length=512,truncation=True)]))
+        output = torch.nn.functional.softmax(output.logits, dim=-1).tolist()[0]
+        if output[0] > output[1]:
+            score = - output[0]
+        elif output[0] < output[1]:
+            score = output[1]
+        else:
+            score = 0
+        outputs.append(round(score,4))
+    return outputs
 
-def get_frequence(s):
-    pass
+def get_frequence(all_df):
+    year_2018_count = all_df[all_df['years'] == 2018]
+    year_2019_count = all_df[all_df['years'] == 2019]
+    year_2020_count = all_df[all_df['years'] == 2020]
+    year_2021_count = all_df[all_df['years'] == 2021]
+
+    dict_2018 = dict(year_2018_count['product'].value_counts())
+
+    def get_frequency(s):
+        print(s)
+        if s is np.nan:
+            fre = 0
+        else:
+            fre = dict_2018[s]
+        return fre
+
+    year_2018_count['frequence'] = year_2018_count['product'].apply(get_frequency)
+
+    dict_2019 = dict(year_2019_count['product'].value_counts())
+
+    def get_frequency(s):
+        fre = dict_2019[s]
+        return fre
+
+    year_2019_count['frequence'] = year_2019_count['product'].apply(get_frequency)
+
+    dict_2020 = dict(year_2020_count['product'].value_counts())
+
+    def get_frequency(s):
+        fre = dict_2020[s]
+        return fre
+
+    year_2020_count['frequence'] = year_2020_count['product'].apply(get_frequency)
+
+    dict_2021 = dict(year_2021_count['product'].value_counts())
+
+    def get_frequency(s):
+        fre = dict_2021[s]
+        return fre
+
+    year_2021_count['frequence'] = year_2021_count['product'].apply(get_frequency)
+
+    # return dict_2018,dict_2019,dict_2020,dict_2021
+    return year_2018_count, year_2019_count, year_2020_count, year_2021_count
 
 
-def get_final_socre(s):
-    pass
+def get_final_socre(year_2018_count, year_2019_count, year_2020_count, year_2021_count):
+    # 计算综合得分
+    year_2018_count['hot_score'] = 0.8 * year_2018_count['frequence'] + 200 * year_2018_count['emotion_score'] + 0
+    year_2019_count['hot_score'] = 0.8 * year_2019_count['frequence'] + 200 * year_2019_count['emotion_score'] + 1 * 10
+    year_2020_count['hot_score'] = 0.8 * year_2020_count['frequence'] + 200 * year_2020_count['emotion_score'] + 2 * 15
+    year_2021_count['hot_score'] = 0.8 * year_2021_count['frequence'] + 200 * year_2021_count['emotion_score'] + 3 * 20
+
+
+    product_hot_score = pd.concat([year_2018_count, year_2019_count, year_2020_count, year_2021_count], axis=0)
+
+    year_2018_count['final_hot'] = year_2018_count['hot_score'].div(np.sum(product_hot_score['hot_score']),                                                    axis=0)  # 化成一个小数 加起来为1
+    year_2019_count['final_hot'] = year_2019_count['hot_score'].div(np.sum(product_hot_score['hot_score']), axis=0)
+    year_2020_count['final_hot'] = year_2020_count['hot_score'].div(np.sum(product_hot_score['hot_score']), axis=0)
+    year_2021_count['final_hot'] = year_2021_count['hot_score'].div(np.sum(product_hot_score['hot_score']), axis=0)
+
+    year_2018 = year_2018_count.sort_values(by="final_hot", ascending=False).reset_index(drop=True)
+    year_2019 = year_2019_count.sort_values(by="final_hot", ascending=False).reset_index(drop=True)
+    year_2020 = year_2020_count.sort_values(by="final_hot", ascending=False).reset_index(drop=True)
+    year_2021 = year_2021_count.sort_values(by="final_hot", ascending=False).reset_index(drop=True)
+
+    product_hot_score_sort = pd.concat([year_2018, year_2019, year_2020, year_2021], axis=0)
+    # product_hot_score['文本'] = product_hot_score['文本'].progress_apply(clearTxt)
+    product_hot_score_sort['productJudge'] = product_hot_score_sort['curpusID'] + ' ' + product_hot_score_sort['text']
+    product_hot_score_sort['productClass'] = product_hot_score_sort['productJudge'].apply(get_product_type)
+    # 去除重复的产品
+    product_hot_score_sort= product_hot_score_sort.drop_duplicates(['product'])
+    # 产品 ID 产品类型 产品名称 产品热度 年份
+    result2_2 = product_hot_score_sort[['productID', 'productClass', 'product', 'hot_score', 'years']]
+    result2_2['productID'] = ['ID' + str(i + 1) for i in range(len(result2_2))]
+
+    return result2_2
 
 
 def get_product_type(s):
@@ -305,8 +391,34 @@ def get_product_type(s):
     else:
         return '景点'
 
+def clearTxt(line):
+    stopword_list = [k.strip() for k in open(
+        './datasets/stopwords.txt', encoding='utf8').readlines() if k.strip() != '']
+    if line != '':
+        line = str(line).strip()
+        # 去除文本中的英文和数字
+        line = re.sub("[a-zA-Z0-9]", "", line)
+        # 只保留中文、大小写字母
+        reg = "[^0-9A-Za-z\u4e00-\u9fa5]"
+        line = re.sub(reg, '', line)
+        # 分词
+        segList = jieba.cut(line, cut_all=False)
+        segSentence = ''
+        for word in segList:
+            if word != '\t':
+                segSentence += word + " "
+    # 去停用词
+    wordList = segSentence.split(' ')
+    sentence = ''
+    for word in wordList:
+        word = word.strip()
+        if word not in stopword_list:
+            if word != '\t':
+                sentence += word + " "
+    return sentence.strip()
+
 
 if __name__ == '__main__':
-    t = ["今天心情不好", "今天心情好"]
+    t = ["今天心情不好", "今天心情好","今天超级开心","今天我很伤心"]
     o = get_sentiment(t)
     print(o)
