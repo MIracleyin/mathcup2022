@@ -11,6 +11,8 @@ import jsonlines
 import json
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import defaultdict
+import networkx as nx
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     all_df = pd.read_csv(os.path.join(processed_path, "all.csv")).dropna()
@@ -67,4 +69,15 @@ if __name__ == '__main__':
     res_pd = pd.DataFrame(res)
     res_pd.columns = ['产品1ID', '产品2ID', '关联度', '关联类型']
     res_pd.to_csv('./dataset/results/result3.csv', index=False, encoding='utf_8_sig')
+
+    G = nx.from_pandas_edgelist(res_pd[res_pd['关联度'] > 0.9], "产品1ID", "产品2ID",
+                                edge_attr=True, create_using=nx.MultiDiGraph())
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 替换sans-serif字体
+    plt.figure(figsize=(15, 15))
+    pos = nx.spring_layout(G, k=0.8)  # k为节点间距离
+    nx.draw(G, with_labels=True, node_color='skyblue',
+            node_size=1500, edge_cmap=plt.cm.Greens, pos=pos)
+    plt.show()
+
+
 
