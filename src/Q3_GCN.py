@@ -77,7 +77,4 @@ if __name__ == '__main__':
     pos = nx.spring_layout(G, k=0.8)  # k为节点间距离
     nx.draw(G, with_labels=True, node_color='skyblue',
             node_size=1500, edge_cmap=plt.cm.Greens, pos=pos)
-    plt.show()
-
-
-
+    plt.savefig('./dataset/results/vis.png', dpi=300)
