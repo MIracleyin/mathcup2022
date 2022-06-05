@@ -1,0 +1,7 @@
+raw_part1_path = "dataset/dataset-2018-2019.xlsx"
+raw_part2_path = "dataset/dataset-2020-2021.xlsx"
+processed_travel = "dataset/processed/travelid_text.csv"
+processed_news = "dataset/processed/newsid_text.csv"
+processed_path = "dataset/processed"
+results_path = "dataset/results"
+stop_path = "dataset/stopwords.txt"
