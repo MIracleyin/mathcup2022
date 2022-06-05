@@ -386,10 +386,10 @@ Just choose `xelatex', no `pdflatex' or `latex' and so on.}
 \def\makenametitle{
 \newpage
 \setcounter{page}{1}
-\begin{center}
-%{\includegraphics[width=4cm]{logo}}
-{\zihao{2} \gmcm@ges@string@contents \par}
-\end{center}
+% \begin{center}
+% %{\includegraphics[width=4cm]{logo}}
+% {\zihao{2} \gmcm@ges@string@contents \par}
+% \end{center}
 
 \vskip0.6cm%
 
