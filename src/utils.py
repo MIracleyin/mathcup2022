@@ -192,6 +192,8 @@ def get_class_infors():
     travel = pd.concat([dataset_travel_1, dataset_travel_2], axis=0)
     food = pd.concat([dataset_food_1, dataset_food_2], axis=0)
     news = pd.concat([dataset_news_1, dataset_news_2], axis=0)
+    travel = pd.read_csv("dataset/processed/travel_related.csv")
+    news = pd.read_csv("dataset/processed/news_related.csv")
 
     return hotel, scenic, travel, food, news
 
@@ -277,6 +279,7 @@ def get_sentiment(text_list):
     tokenizer = BertTokenizer.from_pretrained('IDEA-CCNL/Erlangshen-Roberta-110M-Sentiment')
     model = BertForSequenceClassification.from_pretrained('IDEA-CCNL/Erlangshen-Roberta-110M-Sentiment')
     output = model(torch.tensor([tokenizer.encode(text_list)]))
+    print(torch.softmax(output.logits, dim=-1))
     return output
 
 def get_frequence(s):
@@ -309,4 +312,3 @@ def get_product_type(s):
 if __name__ == '__main__':
     t = ["今天心情不好", "今天心情好"]
     o = get_sentiment(t)
-    print(o)
