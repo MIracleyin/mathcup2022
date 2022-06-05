@@ -1,6 +1,5 @@
 import os.path
 
-import numpy as np
 import pandas as pd
 
 from utils.question2 import get_class_infors, modify_infors, get_all_infors
@@ -21,6 +20,7 @@ if __name__ == '__main__':
     text = all_df['text'].values.tolist()
     # all_df['emotion_score'] = all_df['text'].apply(get_sentiment)
     all_df['emotion_score'] = get_sentiment(text)
+    all_df.to_csv(os.path.join(processed_path, "all.csv"), index=0)
     # all_df['emotion_score'] = 0.5
     year_2018_count, year_2019_count, year_2020_count, year_2021_count = get_frequence(all_df)
     result2_2 = get_final_socre(year_2018_count, year_2019_count, year_2020_count, year_2021_count)
