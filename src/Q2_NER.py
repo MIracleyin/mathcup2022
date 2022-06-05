@@ -9,7 +9,7 @@ from utils.paths import processed_path
 if __name__ == '__main__':
     hotel, scenic, travel, food, news = get_class_infors()
     hotel, scenic, travel, food, news = modify_infors(hotel, scenic, travel, food, news)
-    all_df = get_all_infors(hotel, scenic, travel, food, news)
+    all_df = get_all_infors(hotel, scenic, travel, food, news).dropna()
     all_df.to_csv(os.path.join(processed_path, "all.csv"), index=0)
     print("------------------save to csv-------------------------")
     all_df = pd.read_csv(os.path.join(processed_path, "all.csv"))
