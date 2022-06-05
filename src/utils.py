@@ -369,7 +369,8 @@ def get_final_socre(year_2018_count, year_2019_count, year_2020_count, year_2021
     # 去除重复的产品
     product_hot_score_sort= product_hot_score_sort.drop_duplicates(['product'])
     # 产品 ID 产品类型 产品名称 产品热度 年份
-    result2_2 = product_hot_score_sort[['productID', 'productClass', 'product', 'hot_score', 'years']]
+    result2_2 = product_hot_score_sort[['productID', 'productClass', 'product', 'final_hot', 'years']]
+    result2_2['final_hot'] = result2_2['final_hot'].round(4)
     result2_2['productID'] = ['ID' + str(i + 1) for i in range(len(result2_2))]
 
     return result2_2
