@@ -227,7 +227,78 @@ LDA模型利用了贝叶斯的思想，将每个文本和每个主题词的先�
 \section{问题二建模与求解}
 
 \subsection{模型的构建与求解}
-本问第一步需要从提供的OTA、UGC数据中提取出旅游产品。分析数据可得在酒店、景区和餐饮的数据中分别给出了酒店名称、景区名称和餐饮名称，在游记攻略和微信公众号推文中并未直接给出相关的旅游产品名称。经过观察发现，在这两者的标题和正文中包含了相关的旅游产品名称。因此，需要从这些信息中提取出相关的旅游产品名称。经过分析可以采用命名实体识别(Named Entity Recognition,简称NER) 来从海量文本中提取出我们需要的旅游产品名称。NER是指识别文本中具有特定意义的词（实体），主要包括人名、地名、机构名、专有名词等等,并把我们需要识别的词在文本序列中标注出来。
+本问第一步需要从提供的OTA、UGC数据中提取出旅游产品。分析数据可得在酒店、景区和餐饮的数据中分别给出了酒店名称、景区名称和餐饮名称，在游记攻略和微信公众号推文中并未直接给出相关的旅游产品名称。经过观察发现，在这两者的标题和正文中包含了相关的旅游产品名称。因此，需要从这些信息中提取出相关的旅游产品名称。经过分析可以采用命名实体识别(Named Entity Recognition,简称NER) 来从海量文本中提取出我们需要的旅游产品名称。NER是指识别文本中具有特定意义的词（实体），主要包括人名、地名、机构名、专有名词等等,并把我们需要识别的词在文本序列中标注出来。本文采用bert模型来进行NER。本文采取无监督的方式进行NER。首先将已有的权重对bert模型进行初始化，然后将第一问过滤掉不相关后所剩余的相关评论输入模型，提取出相关的旅游产品名称。
+下表给出了包含语料ID、产品ID、产品名称的提取结果。
+\begin{center}
+  \begin{longtable}{c|c|c}
+    \caption{旅游产品提取表}
+    \label{wx_yj_related}\\
+      \hline
+      \textbf{语料ID} & \textbf{产品ID} & \textbf{产品名称} \\
+      \hline
+      酒店评论-1001 & \begin{tabular}[c]{@{}c@{}}
+        ID1
+        \end{tabular} 
+        & \begin{tabular}[c]{@{}l@{}}
+          茂名君悦商务酒店
+        \end{tabular} \\
+        ... & \begin{tabular}[c]{@{}c@{}}
+          ...
+        \end{tabular} 
+        & \begin{tabular}[c]{@{}l@{}}
+          ...
+        \end{tabular} \\
+        景区评论-1001 & \begin{tabular}[c]{@{}c@{}}
+          ID90
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}l@{}}
+            中国第一滩旅游度假区
+          \end{tabular} \\
+          ... & \begin{tabular}[c]{@{}c@{}}
+            ...
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}l@{}}
+            ...
+          \end{tabular} \\
+          旅游攻略-1001 & \begin{tabular}[c]{@{}c@{}}
+            ID203
+            \end{tabular} 
+            & \begin{tabular}[c]{@{}l@{}}
+              放鸡岛
+            \end{tabular} \\
+            ... & \begin{tabular}[c]{@{}c@{}}
+              ...
+            \end{tabular} 
+            & \begin{tabular}[c]{@{}l@{}}
+              ...
+            \end{tabular} \\
+            餐饮评论-1001 & \begin{tabular}[c]{@{}c@{}}
+              ID339
+              \end{tabular} 
+              & \begin{tabular}[c]{@{}l@{}}
+                盛香烧鹅（东方市场店）
+              \end{tabular} \\
+              ... & \begin{tabular}[c]{@{}c@{}}
+                ...
+              \end{tabular} 
+              & \begin{tabular}[c]{@{}l@{}}
+                ...
+              \end{tabular} \\
+              微信公共号文章-1006 & \begin{tabular}[c]{@{}c@{}}
+                ID418
+                \end{tabular} 
+                & \begin{tabular}[c]{@{}l@{}}
+                  厦门
+                \end{tabular} \\
+                ... & \begin{tabular}[c]{@{}c@{}}
+                  ...
+                \end{tabular} 
+                & \begin{tabular}[c]{@{}l@{}}
+                  ...
+                \end{tabular} \\
+      \hline
+  \end{longtable}
+  \end{center}
 \section{问题三建模与求解}
 
 \subsection{图卷积神经网络}
