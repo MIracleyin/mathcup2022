@@ -228,9 +228,21 @@ LDA模型利用了贝叶斯的思想，将每个文本和每个主题词的先�
 
 \section{问题二建模与求解}
 
-本问第一步需要从提供的OTA、UGC数据中提取出旅游产品。分析数据可得在酒店、景区和餐饮的数据中分别给出了酒店名称、景区名称和餐饮名称，在游记攻略和微信公众号推文中并未直接给出相关的旅游产品名称。经过观察发现，在这两者的标题和正文中包含了相关的旅游产品名称。因此，需要从这些信息中提取出相关的旅游产品名称。经过分析可以采用命名实体识别(Named Entity Recognition,简称NER) 来从海量文本中提取出我们需要的旅游产品名称。NER是指识别文本中具有特定意义的词（实体），主要包括人名、地名、机构名、专有名词等等,并把我们需要识别的词在文本序列中标注出来。本文采用 BERT \cite{vaswani_attention_2017}模型来进行NER。本文采取无监督的方式进行NER。首先将已有的权重对 BERT 模型进行初始化，然后将第一问过滤掉不相关后所剩余的相关评论输入模型，提取出相关的旅游产品名称。
+本问第一步需要从提供的OTA、UGC数据中提取出旅游产品。分析数据可得在酒店、景区和餐饮的数据中分别给出了酒店名称、景区名称和餐饮名称，在游记攻略和微信公众号推文中并未直接给出相关的旅游产品名称。经过观察发现，在这两者的标题和正文中包含了相关的旅游产品名称。因此，需要从这些信息中提取出相关的旅游产品名称。经过分析可以采用命名实体识别(Named Entity Recognition,简称NER) \cite{nadeau_survey_nodate,Xu_nerpy_Text_to}来从海量文本中提取出我们需要的旅游产品名称。NER是指识别文本中具有特定意义的词（实体），主要包括人名、地名、机构名、专有名词等等,并把我们需要识别的词在文本序列中标注出来。本文采用 BERT \cite{vaswani_attention_2017}模型来进行NER。本文采取无监督的方式进行NER。首先将已有的权重对 BERT 模型进行初始化，然后将第一问过滤掉不相关后所剩余的相关评论输入模型，提取出相关的旅游产品名称。本文使用的 BERT-NER 模型如图 \ref{ner} 所示
 
-表\ref{entity_related}给出了包含语料ID、产品ID、产品名称的提取结果。
+
+\begin{figure}[!h]
+  \centering
+  \includegraphics[width=.9\textwidth]{ner.png}
+  \caption{命名实体识别结构}
+  \label{ner}
+  \end{figure}
+
+
+\subsection{模型的构建与求解}
+
+本文使用 BERT 在游记攻略与公众号推问上进行 NER 任务，最终提取到的结果与其余数据合并，表\ref{entity_related}给出了包含语料ID、产品ID、产品名称的提取结果。
+\newpage
 
 \begin{center}
   \begin{longtable}{c|c|c}
@@ -303,7 +315,127 @@ LDA模型利用了贝叶斯的思想，将每个文本和每个主题词的先�
   \end{longtable}
   \end{center}
 
-\subsection{模型的构建与求解}
+分析数据可以得出，本文决定从两点进行热度分析。首先是对评论文本进行情感分析，从消费者对该旅游产品的评论得出该旅游产品是否受大众喜爱。其次，该旅游产品的消费频次也是一个很重要的影响因素。从这两个点出发，本文首先需要对每一个旅游产品的评论进行情感分析。经过分析，本文选用 BERT 模型对文本进行正向和负向的情感分析。最终模型会返回两个处于0到1之间的数。前者大说明该文本为负向情感，并将这个数取负作为该文本的情感得分；后者大的话，说明该文本是正向情感，并将这个数作为该文本的情感得分。其次需要按年统计出每一个产品消费的频次。最终将情感得分和产品消费的频次作为评价该旅游产品热度的依据。本文认为用户对该旅游产品的情感得分在评价该旅游产品热度中更为重要，因此会给情感得分更大的比重。同时因为年份越大，它的热度会比年份小的大。所以本文会提高年份大的旅游产品的得分。产品热度得分计算公式为：
+  \begin{gather}
+	H_i~~=~~0.8~*~F_i ~+ ~200 ~*~ E_i
+\end{gather}
+
+其中随机变量$H$为旅游产品的热度得分。$F$为旅游产品的频次。$E$为旅游产品的情感得分。$i$取$2018,2019,2020,2021$。
+
+
+最终将所得的旅游产品得分进行归一化进行排序。此外在对旅游产品进行产品类型分类时，我们一共给出了七个类，分别是：景区、酒店、特色餐饮、景点、民宿、乡村旅游、文创，根据评论的内容中是否包含这些关键词对旅游产品进行分类。
+
+
+表\ref{hot_rate}给出了包含产品ID、产品类型、产品名称、产品热度、年份的旅游产品热度分析。
+
+\begin{center}
+  \begin{longtable}{c|c|c|c|c}
+    \caption{旅游产品的热度}
+    \label{hot_rate}\\
+      \hline
+      \textbf{产品ID} & \textbf{产品类型} & \textbf{产品名称} & \textbf{产品热度}& \textbf{年份}\\
+      \hline
+      ID1 & \begin{tabular}[c]{@{}c@{}}
+        特色餐饮
+        \end{tabular} 
+        & \begin{tabular}[c]{@{}l@{}}
+          渔乐码头烤鱼牛蛙晚饭餐厅
+        \end{tabular} 
+        & \begin{tabular}[c]{@{}c@{}}
+          0.0049
+          \end{tabular}
+          & \begin{tabular}[c]{@{}c@{}}
+            2018
+            \end{tabular}\\
+        ... & \begin{tabular}[c]{@{}c@{}}
+          ...
+        \end{tabular} 
+        & \begin{tabular}[c]{@{}l@{}}
+          ...
+        \end{tabular} 
+        & \begin{tabular}[c]{@{}c@{}}
+          ...
+        \end{tabular} 
+        & \begin{tabular}[c]{@{}c@{}}
+          ...
+        \end{tabular} \\
+
+        ID236 & \begin{tabular}[c]{@{}c@{}}
+          景区
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}l@{}}
+            茂名森林公园
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}c@{}}
+            0.0064
+            \end{tabular}
+            & \begin{tabular}[c]{@{}c@{}}
+              2019
+              \end{tabular}\\
+          ... & \begin{tabular}[c]{@{}c@{}}
+            ...
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}l@{}}
+            ...
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}c@{}}
+            ...
+          \end{tabular} 
+          & \begin{tabular}[c]{@{}c@{}}
+            ...
+          \end{tabular} \\
+
+          ID412 & \begin{tabular}[c]{@{}c@{}}
+            酒店
+            \end{tabular} 
+            & \begin{tabular}[c]{@{}l@{}}
+              柏曼酒店(茂名大道东汇城店)
+            \end{tabular} 
+            & \begin{tabular}[c]{@{}c@{}}
+              0.0048
+              \end{tabular}
+              & \begin{tabular}[c]{@{}c@{}}
+                2020
+                \end{tabular}\\
+            ... & \begin{tabular}[c]{@{}c@{}}
+              ...
+            \end{tabular} 
+            & \begin{tabular}[c]{@{}l@{}}
+              ...
+            \end{tabular} 
+            & \begin{tabular}[c]{@{}c@{}}
+              ...
+            \end{tabular} 
+            & \begin{tabular}[c]{@{}c@{}}
+              ...
+            \end{tabular} \\
+            ID633 & \begin{tabular}[c]{@{}c@{}}
+              特色餐饮
+              \end{tabular} 
+              & \begin{tabular}[c]{@{}l@{}}
+                友情有意音乐餐厅
+              \end{tabular} 
+              & \begin{tabular}[c]{@{}c@{}}
+                0.0036
+                \end{tabular}
+                & \begin{tabular}[c]{@{}c@{}}
+                  2021
+                  \end{tabular}\\
+              ... & \begin{tabular}[c]{@{}c@{}}
+                ...
+              \end{tabular} 
+              & \begin{tabular}[c]{@{}l@{}}
+                ...
+              \end{tabular} 
+              & \begin{tabular}[c]{@{}c@{}}
+                ...
+              \end{tabular} 
+              & \begin{tabular}[c]{@{}c@{}}
+                ...
+              \end{tabular} \\
+      \hline
+  \end{longtable}
+  \end{center}
 
 \section{问题三建模与求解}
 
@@ -343,10 +475,9 @@ LDA模型利用了贝叶斯的思想，将每个文本和每个主题词的先�
 
 模型训练的有效性的评价就包括与节点之间连接性的可能性预测应当大于一个随机噪声分布。在这类问题中，有诸多常用的损失函数，例如：交叉熵损失（InfoNCE）、贝叶斯个性化排序损失（BPR）或是间隔损失等。
 
-本文基于图卷积神经网络（GCN）进行节点间的链路预测。首先，本文根据前文的Bert模型，对每个实体提取了一个768维度的表征，用于刻画该实体的内在特征。由于链接预测是个有监督学习任务，需要根据已有的监督信号，即已有的节点链接进行表征的传递与聚合，进而才能够得到蕴含高阶信息的表征。根据文本在同一篇微信公众号推文或游记攻略中的同时出现情况，则本文认为这两个实体是具备关联的。本文在这里将已有的768维节点表征作为每个节点的初始表征，用于随后的表征的传递与聚合。
+本文基于图卷积神经网络（GCN）进行节点间的链路预测。首先，本文根据前文的 BERT 模型，对每个实体提取了一个768维度的表征，用于刻画该实体的内在特征。由于链接预测是个有监督学习任务，需要根据已有的监督信号，即已有的节点链接进行表征的传递与聚合，进而才能够得到蕴含高阶信息的表征。根据文本在同一篇微信公众号推文或游记攻略中的同时出现情况，则本文认为这两个实体是具备关联的。本文在这里将已有的768维节点表征作为每个节点的初始表征，用于随后的表征的传递与聚合。
 
 本文基于以上相关性得分，过滤相关性小于 0.8 的结果，图\ref{vis}为可视化后的知识图谱。
-\newpage
 
 \begin{figure}[!h]
   \centering

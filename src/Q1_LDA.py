@@ -19,4 +19,4 @@ if __name__ == '__main__':
     travel['文章ID'] = travel['文章ID'].apply(lambda x: "旅游攻略" + str(x))
     res1 = pd.concat([travel, news], axis=0)
     res1['分类标签'] = res1['分类标签'].apply(lambda x:"相关" if x == 1 else "不相关")
-    res1.to_csv("dataset/results/result1.csv", index=False)
+    res1.to_csv("dataset/results/result1.csv", index=False, encoding='utf_8_sig')
